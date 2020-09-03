@@ -19,11 +19,18 @@
 -spec format(unicode:chardata(), logger:level(), logger:metadata(),
              log_formatter:config()) ->
         unicode:chardata().
-format(String, Level, Metadata, _Config) ->
+format(String, Level, Metadata, Config) ->
   Domain = maps:get(domain, Metadata, []),
-  Time = maps:get(time, Metadata, erlang:system_time(microsecond)),
-  Prefix = io_lib:format(<<"~s ~-*s ~-*w ">>,
-                         [format_time(Time),
+  TimeString = case maps:get(include_time, Config, false) of
+                 true ->
+                   Time = maps:get(time, Metadata,
+                                   erlang:system_time(microsecond)),
+                   [format_time(Time), $\s];
+                 false ->
+                   []
+               end,
+  Prefix = io_lib:format(<<"~s~-*s ~-*w ">>,
+                         [TimeString,
                           9, log_formatter:format_level(Level),
                           24, Domain]),
   Indent = iolist_size(Prefix),

@@ -22,6 +22,7 @@
 
 -type config() :: #{debug => boolean(),
                     format => format(),
+                    include_time => boolean(),
                     atom() => any()}.
 
 -type msg() :: {io:format(), [term()]}

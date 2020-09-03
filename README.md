@@ -29,6 +29,8 @@ The following options are available in the formatter configuration map:
 - `debug`: print log events on the standard output; used when developing the
   formatter itself.
 - `format`: the output format, either `text` or `json`.
+- `include_time`: include the time in each formatted message (`text` format
+  only).
 
 # Contact
 If you find a bug or have any question, feel free to open a GitHub issue or to
