@@ -34,30 +34,23 @@ format(String, Level, Metadata, Config) ->
                           9, log_formatter:format_level(Level),
                           24, Domain]),
   Indent = iolist_size(Prefix),
-  IndentedString = indent_string_extra_lines(String, Indent),
+  IndentedString = indent_string(String, Indent),
   IgnoredMetadata = [domain, time, % duplicate
                      error_logger, logger_formatter, report_cb, % useless
                      mfa, file, line, % added by log macros
                      pid, gl], % added by the logger
   Metadata2 = maps:without(IgnoredMetadata, Metadata),
-  IndentedMetadata = if
+  MetadataString = if
                        map_size(Metadata2) =:= 0 ->
                          [];
                        true ->
-                         [$\n,
-                          indent_string(format_metadata(Metadata2), Indent)]
+                         [<<"  ">>, format_metadata(Metadata2)]
                      end,
-  [Prefix, IndentedString, IndentedMetadata, $\n].
+  [Prefix, IndentedString, MetadataString, $\n].
 
 -spec indent_string(unicode:chardata(), non_neg_integer()) ->
         unicode:chardata().
 indent_string(String, N) ->
-  Padding = io_lib:format("~*s", [N, ""]),
-  [Padding, indent_string_extra_lines(String, N)].
-
--spec indent_string_extra_lines(unicode:chardata(), non_neg_integer()) ->
-        unicode:chardata().
-indent_string_extra_lines(String, N) ->
   Padding = io_lib:format("~*s", [N, ""]),
   string:replace(String, "\n", [$\n, Padding], all).
 
@@ -69,8 +62,8 @@ format_time(SystemTime) ->
 -spec format_metadata(logger:metadata()) -> unicode:chardata().
 format_metadata(Metadata) ->
   Pairs = maps:to_list(Metadata),
-  lists:map(fun format_metadata_pair/1, Pairs).
+  lists:join($\s, lists:map(fun format_metadata_pair/1, Pairs)).
 
 -spec format_metadata_pair({atom(), term()}) -> unicode:chardata().
 format_metadata_pair({Name, Value}) ->
-  [atom_to_binary(Name), $:, $\s, io_lib:format(<<"~0tp">>, [Value]), $\n].
+  [atom_to_binary(Name), $=, io_lib:format(<<"~0tp">>, [Value])].
