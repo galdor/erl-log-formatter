@@ -18,10 +18,9 @@
   {registered, []},
   {applications,
    [kernel,
-    stdlib
-   ]},
+    stdlib,
+    jsx]},
   {env, []},
   {modules, []},
 
-  {licenses, ["ISC"]}
- ]}.
+  {licenses, ["ISC"]}]}.

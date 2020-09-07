@@ -1,4 +1,4 @@
-[{<<"uri">>,
+[{<<"jsx">>,
   {git,"https://github.com/talentdeficit/jsx.git",
        {ref,"a45c997cedc3bcc0bb014ac3faa7ec16bcd4f7b1"}},
   0}].
