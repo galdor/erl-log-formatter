@@ -14,7 +14,7 @@
 
 {application, log_formatter,
  [{description, "Customizable formatter for the logger application."},
-  {vsn, "1.1.0"},
+  {vsn, "1.2.0"},
   {registered, []},
   {applications,
    [kernel,

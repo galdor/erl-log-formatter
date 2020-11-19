@@ -1,6 +1,8 @@
 % erl-log-formatter changelog
 
 # Next Version
+
+# 1.2.0
 ## Features
 - For JSON logs, format the domain as a single string where domain parts are
   separated by full stop characters.
