@@ -14,12 +14,12 @@
 
 -module(log_formatter_text).
 
--export([format/4]).
+-export([format/4, pad_multiline_string/2, last_line/1]).
 
 -spec format(unicode:chardata(), logger:level(), logger:metadata(),
              log_formatter:config()) ->
         unicode:chardata().
-format(String, Level, Metadata, Config) ->
+format(String0, Level, Metadata, Config) ->
   Domain = maps:get(domain, Metadata, []),
   TimeString = case maps:get(include_time, Config, false) of
                  true ->
@@ -34,7 +34,9 @@ format(String, Level, Metadata, Config) ->
                           9, log_formatter:format_level(Level),
                           24, Domain]),
   Indent = iolist_size(Prefix),
-  IndentedString = indent_string(String, Indent),
+  String = string:trim(String0, trailing, " \n\t"),
+  PaddedString = pad_multiline_string(String, 60),
+  IndentedString = indent_multiline_string(PaddedString, Indent),
   IgnoredMetadata = [domain, time, % duplicate
                      error_logger, logger_formatter, report_cb, % useless
                      mfa, file, line, % added by log macros
@@ -48,11 +50,40 @@ format(String, Level, Metadata, Config) ->
                      end,
   [Prefix, IndentedString, MetadataString, $\n].
 
--spec indent_string(unicode:chardata(), non_neg_integer()) ->
+-spec indent_multiline_string(unicode:chardata(), non_neg_integer()) ->
         unicode:chardata().
-indent_string(String, N) ->
-  Padding = io_lib:format("~*s", [N, ""]),
+indent_multiline_string(String, N) ->
+  Padding = lists:duplicate(N, $\s),
   string:replace(String, "\n", [$\n, Padding], all).
+
+-spec pad_multiline_string(unicode:chardata(), non_neg_integer()) ->
+        unicode:chardata().
+pad_multiline_string(String, N) ->
+  Bin = unicode:characters_to_binary(String),
+  case string:length(last_line(Bin)) of
+    Len when Len < N ->
+      Padding = lists:duplicate(N-Len, $\s),
+      [Bin, Padding];
+    _ ->
+      Bin
+  end.
+
+-spec last_line(binary()) -> binary().
+last_line(<<>>) ->
+  <<>>;
+last_line(Bin) ->
+  case binary:last(Bin) of
+    $\n ->
+      last_line(binary:part(Bin, 0, byte_size(Bin)-1));
+    _ ->
+      case binary:matches(Bin, <<"\n">>) of
+        [] ->
+          Bin;
+        Matches ->
+          {Pos, _} = lists:last(Matches),
+          binary:part(Bin, Pos+1, byte_size(Bin)-Pos-1)
+      end
+  end.
 
 -spec format_time(SystemTime :: integer()) -> unicode:chardata().
 format_time(SystemTime) ->

@@ -1,10 +1,12 @@
 % erl-log-formatter changelog
 
 # Next Version
-## Misc
-- Switch from jsx to [erl-json](https://github.com/galdor/erl-json).
+## Features
 - For JSON logs, format the domain as a single string where domain parts are
   separated by full stop characters.
+- Align metadata in text logs for better readability.
+## Misc
+- Switch from jsx to [erl-json](https://github.com/galdor/erl-json).
 
 # 1.1.0
 ## Bugs
