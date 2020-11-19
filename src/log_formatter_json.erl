@@ -33,9 +33,10 @@ format(String, Level, Metadata, _Config) ->
           data => format_metadata(Metadata2)},
   [json:serialize(Msg), $\n].
 
--spec format_domain([atom()]) -> [binary()].
+-spec format_domain([atom()]) -> binary().
 format_domain(Domain) ->
-  lists:map(fun erlang:atom_to_binary/1, Domain).
+  Parts = lists:map(fun erlang:atom_to_binary/1, Domain),
+  iolist_to_binary(lists:join($., Parts)).
 
 -spec format_metadata(logger:metadata()) -> logger:metadata().
 format_metadata(Metadata) ->
