@@ -19,7 +19,7 @@
   {applications,
    [kernel,
     stdlib,
-    jsx]},
+    json]},
   {env, []},
   {modules, []},
 

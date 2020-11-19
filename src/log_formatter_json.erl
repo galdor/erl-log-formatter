@@ -26,12 +26,16 @@ format(String, Level, Metadata, _Config) ->
                      error_logger, logger_formatter, report_cb, % useless
                      gl], % added by the logger
   Metadata2 = maps:without(IgnoredMetadata, Metadata),
-  Msg = #{level => Level,
-          domain => Domain,
+  Msg = #{level => atom_to_binary(Level),
+          domain => format_domain(Domain),
           time => Time,
           message => unicode:characters_to_binary(String),
           data => format_metadata(Metadata2)},
-  [jsx:encode(Msg), $\n].
+  [json:serialize(Msg), $\n].
+
+-spec format_domain([atom()]) -> [binary()].
+format_domain(Domain) ->
+  lists:map(fun erlang:atom_to_binary/1, Domain).
 
 -spec format_metadata(logger:metadata()) -> logger:metadata().
 format_metadata(Metadata) ->
@@ -42,8 +46,10 @@ format_metadata(Metadata) ->
 format_metadata_entry(file, Value, Acc) ->
   Acc#{file => unicode:characters_to_binary(Value)};
 format_metadata_entry(mfa, {M, F, A}, Acc) ->
-  Acc#{mfa => [M, F, A]};
+  Acc#{mfa => [atom_to_binary(M), atom_to_binary(F), A]};
 format_metadata_entry(pid, Value, Acc) ->
   Acc#{pid => list_to_binary(pid_to_list(Value))};
+format_metadata_entry(Key, Value, Acc) when is_atom(Value) ->
+  Acc#{Key => atom_to_binary(Value)};
 format_metadata_entry(Key, Value, Acc) ->
   Acc#{Key => Value}.

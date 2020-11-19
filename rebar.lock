@@ -1,4 +1,4 @@
-[{<<"jsx">>,
-  {git,"https://github.com/talentdeficit/jsx.git",
-       {ref,"a45c997cedc3bcc0bb014ac3faa7ec16bcd4f7b1"}},
+[{<<"json">>,
+  {git,"https://github.com/galdor/erl-json.git",
+       {ref,"d87dcca03f17ea18d79badcedc1d9abde842a24d"}},
   0}].
