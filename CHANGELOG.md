@@ -1,6 +1,8 @@
 % erl-log-formatter changelog
 
 # Next Version
+## Bugs
+- Fix text formatting for binary strings in metadata.
 
 # 1.2.0
 ## Features
