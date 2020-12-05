@@ -1,6 +1,10 @@
 % erl-log-formatter changelog
 
 # Next Version
+## Bugs
+- Fix formatting of non-JSON metadata in JSON mode.
+## Misc
+- Format the domain in text mode.
 
 # 1.2.1
 ## Bugs
