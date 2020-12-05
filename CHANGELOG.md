@@ -1,6 +1,8 @@
 % erl-log-formatter changelog
 
 # Next Version
+## Features
+- Format separately the `event` field.
 ## Bugs
 - Fix formatting of non-JSON metadata in JSON mode.
 ## Misc

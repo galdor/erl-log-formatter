@@ -14,7 +14,7 @@
 
 -module(log_formatter).
 
--export([format/2, format_level/1, format_domain/1]).
+-export([format/2, format_level/1, format_domain/1, format_event/1]).
 
 -export_type([format/0, config/0, msg/0]).
 
@@ -79,5 +79,13 @@ format_level(Level) ->
 
 -spec format_domain([atom()]) -> binary().
 format_domain(Domain) ->
-  Parts = lists:map(fun erlang:atom_to_binary/1, Domain),
+  format_atom_list(Domain).
+
+-spec format_event([atom()]) -> binary().
+format_event(Event) ->
+  format_atom_list(Event).
+
+-spec format_atom_list([atom()]) -> binary().
+format_atom_list(Atoms) ->
+  Parts = lists:map(fun erlang:atom_to_binary/1, Atoms),
   iolist_to_binary(lists:join($., Parts)).

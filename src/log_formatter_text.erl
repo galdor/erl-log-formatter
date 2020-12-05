@@ -34,10 +34,17 @@ format(String0, Level, Metadata, Config) ->
                           9, log_formatter:format_level(Level),
                           24, log_formatter:format_domain(Domain)]),
   Indent = iolist_size(Prefix),
-  String = string:trim(String0, trailing, " \n\t"),
-  PaddedString = pad_multiline_string(String, 60),
+  String = case maps:find(event, Metadata) of
+             {ok, Event} ->
+               EventString = log_formatter:format_event(Event),
+               [$[, EventString, $], $\s, String0];
+             error ->
+               String0
+           end,
+  TrimmedString = string:trim(String, trailing, " \n\t"),
+  PaddedString = pad_multiline_string(TrimmedString, 80),
   IndentedString = indent_multiline_string(PaddedString, Indent),
-  IgnoredMetadata = [domain, time, % duplicate
+  IgnoredMetadata = [domain, time, event, % duplicate
                      error_logger, logger_formatter, report_cb, % useless
                      mfa, file, line, % added by log macros
                      pid, gl], % added by the logger

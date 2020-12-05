@@ -31,7 +31,13 @@ format(String, Level, Metadata, _Config) ->
           time => Time,
           message => unicode:characters_to_binary(String),
           data => format_metadata(Metadata2)},
-  [json:serialize(Msg), $\n].
+  Msg2 = case maps:find(event, Metadata) of
+           {ok, Event} ->
+             Msg#{event => log_formatter:format_event(Event)};
+           error ->
+             Msg
+         end,
+  [json:serialize(Msg2), $\n].
 
 -spec format_metadata(logger:metadata()) -> logger:metadata().
 format_metadata(Metadata) ->
