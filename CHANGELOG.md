@@ -1,6 +1,8 @@
 % erl-log-formatter changelog
 
 # Next Version
+
+# 1.3.0
 ## Features
 - Format separately the `event` field.
 ## Bugs
