@@ -50,7 +50,28 @@ format_metadata_entry(mfa, {M, F, A}, Acc) ->
   Acc#{mfa => [atom_to_binary(M), atom_to_binary(F), A]};
 format_metadata_entry(pid, Value, Acc) ->
   Acc#{pid => list_to_binary(pid_to_list(Value))};
-format_metadata_entry(Key, Value, Acc) when is_atom(Value) ->
-  Acc#{Key => atom_to_binary(Value)};
 format_metadata_entry(Key, Value, Acc) ->
-  Acc#{Key => Value}.
+  case is_json_serializable(Value) of
+    true ->
+      Acc#{Key => Value};
+    false ->
+      Data = io_lib:format(<<"~0tp">>, [Value]),
+      Acc#{Key => unicode:characters_to_binary(Data)}
+  end.
+
+-spec is_json_serializable(term()) -> boolean().
+is_json_serializable(null) ->
+  true;
+is_json_serializable(V) when is_boolean(V); is_number(V); is_binary(V) ->
+  true;
+is_json_serializable(V) when is_list(V) ->
+  lists:all(fun is_json_serializable/1, V);
+is_json_serializable(V) when is_map(V) ->
+  lists:all(fun
+              ({MK, MV}) when is_atom(MK); is_binary(MK); is_list(MK) ->
+                is_json_serializable(MV);
+              ({_, _}) ->
+                false
+            end, maps:to_list(V));
+is_json_serializable(_) ->
+  false.
