@@ -14,7 +14,8 @@
 
 -module(log_formatter).
 
--export([format/2, format_level/1, format_domain/1, format_event/1]).
+-export([format/2, format_level/1, format_domain/1, format_event/1,
+         format_metadata_value/1]).
 
 -export_type([format/0, config/0, msg/0]).
 
@@ -89,3 +90,18 @@ format_event(Event) ->
 format_atom_list(Atoms) ->
   Parts = lists:map(fun erlang:atom_to_binary/1, Atoms),
   iolist_to_binary(lists:join($., Parts)).
+
+-spec format_metadata_value(term()) -> unicode:chardata().
+format_metadata_value(V) when is_binary(V) ->
+  V;
+format_metadata_value(V) when is_atom(V) ->
+  format_metadata_value(atom_to_binary(V));
+format_metadata_value(V) when is_list(V) ->
+  case unicode:characters_to_binary(V) of
+    String when is_binary(String) ->
+      String;
+    _ ->
+      io_lib:format(<<"~0tp">>, [V])
+  end;
+format_metadata_value(V) ->
+  V.

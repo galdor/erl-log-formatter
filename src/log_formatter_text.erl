@@ -107,10 +107,9 @@ format_metadata_pair({Name, Value}) ->
   [atom_to_binary(Name), $=, format_metadata_value(Value)].
 
 -spec format_metadata_value(term()) -> unicode:chardata().
-format_metadata_value(Value) when is_binary(Value) ->
-  quote_string(Value);
 format_metadata_value(Value) ->
-  io_lib:format(<<"~0tp">>, [Value]).
+  Data = log_formatter:format_metadata_value(Value),
+  quote_string(iolist_to_binary(Data)).
 
 -spec quote_string(binary()) -> unicode:chardata().
 quote_string(String) ->
