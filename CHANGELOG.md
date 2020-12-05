@@ -5,6 +5,7 @@
 - Format separately the `event` field.
 ## Bugs
 - Fix formatting of non-JSON metadata in JSON mode.
+- Fix various metadata formatting issues.
 ## Misc
 - Format the domain in text mode.
 

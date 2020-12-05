@@ -97,11 +97,21 @@ format_metadata_value(V) when is_binary(V) ->
 format_metadata_value(V) when is_atom(V) ->
   format_metadata_value(atom_to_binary(V));
 format_metadata_value(V) when is_list(V) ->
-  case unicode:characters_to_binary(V) of
+  try
+    unicode:characters_to_binary(V)
+  of
     String when is_binary(String) ->
       String;
     _ ->
-      io_lib:format(<<"~0tp">>, [V])
+      format_term(V)
+  catch
+    error:badarg ->
+      format_term(V)
   end;
 format_metadata_value(V) ->
-  V.
+  format_term(V).
+
+-spec format_term(term()) -> unicode:chardata().
+format_term(Term) ->
+  Data = io_lib:format(<<"~0tp">>, [Term]),
+  unicode:characters_to_binary(Data).
