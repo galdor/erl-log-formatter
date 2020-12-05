@@ -29,10 +29,10 @@ format(String0, Level, Metadata, Config) ->
                  false ->
                    []
                end,
-  Prefix = io_lib:format(<<"~s~-*s ~-*w ">>,
+  Prefix = io_lib:format(<<"~s~-*s ~-*ts ">>,
                          [TimeString,
                           9, log_formatter:format_level(Level),
-                          24, Domain]),
+                          24, log_formatter:format_domain(Domain)]),
   Indent = iolist_size(Prefix),
   String = string:trim(String0, trailing, " \n\t"),
   PaddedString = pad_multiline_string(String, 60),

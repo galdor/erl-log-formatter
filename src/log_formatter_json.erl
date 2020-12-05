@@ -27,16 +27,11 @@ format(String, Level, Metadata, _Config) ->
                      gl], % added by the logger
   Metadata2 = maps:without(IgnoredMetadata, Metadata),
   Msg = #{level => atom_to_binary(Level),
-          domain => format_domain(Domain),
+          domain => log_formatter:format_domain(Domain),
           time => Time,
           message => unicode:characters_to_binary(String),
           data => format_metadata(Metadata2)},
   [json:serialize(Msg), $\n].
-
--spec format_domain([atom()]) -> binary().
-format_domain(Domain) ->
-  Parts = lists:map(fun erlang:atom_to_binary/1, Domain),
-  iolist_to_binary(lists:join($., Parts)).
 
 -spec format_metadata(logger:metadata()) -> logger:metadata().
 format_metadata(Metadata) ->

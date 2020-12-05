@@ -14,7 +14,7 @@
 
 -module(log_formatter).
 
--export([format/2, format_level/1]).
+-export([format/2, format_level/1, format_domain/1]).
 
 -export_type([format/0, config/0, msg/0]).
 
@@ -76,3 +76,8 @@ format_msg({Format, Args}, Level, Metadata, Config) ->
 -spec format_level(logger:level()) -> unicode:chardata().
 format_level(Level) ->
   atom_to_binary(Level).
+
+-spec format_domain([atom()]) -> binary().
+format_domain(Domain) ->
+  Parts = lists:map(fun erlang:atom_to_binary/1, Domain),
+  iolist_to_binary(lists:join($., Parts)).
