@@ -14,7 +14,7 @@
 
 -module(log_formatter_text).
 
--export([format/4, pad_multiline_string/2, last_line/1]).
+-export([format/4]).
 
 -spec format(unicode:chardata(), logger:level(), logger:metadata(),
              log_formatter:config()) ->
