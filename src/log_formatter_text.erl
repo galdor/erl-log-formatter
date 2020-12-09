@@ -53,7 +53,7 @@ format(String0, Level, Metadata, Config) ->
     end,
   TrimmedString = string:trim(String, trailing, " \n\t"),
   PaddedString = pad_multiline_string(TrimmedString, 80 + StringLengthDiff),
-  Indent = iolist_size(Prefix),
+  Indent = iolist_size(Prefix) - StringLengthDiff,
   IndentedString = indent_multiline_string(PaddedString, Indent),
   IgnoredMetadata = [domain, time, event, % duplicate
                      error_logger, logger_formatter, report_cb, % useless
