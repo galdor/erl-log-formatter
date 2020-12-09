@@ -20,6 +20,10 @@
              log_formatter:config()) ->
         unicode:chardata().
 format(String0, Level, Metadata, Config) ->
+  %% Code is quite hairy due to the multiple possible combinations of elements
+  %% in the line. Additionally, the optional colorization makes it necessary
+  %% to adjust indentation and padding since color escape sequences add
+  %% characters to strings but are not visible.
   Domain = maps:get(domain, Metadata, []),
   TimeString = case maps:get(include_time, Config, false) of
                  true ->
@@ -29,20 +33,27 @@ format(String0, Level, Metadata, Config) ->
                  false ->
                    []
                end,
+  DomainString0 = log_formatter:format_domain(Domain),
+  {DomainString, DomainLengthDiff} =
+    maybe_colorize(DomainString0, green, Config),
   Prefix = io_lib:format(<<"~s~-*s ~-*ts ">>,
                          [TimeString,
                           9, log_formatter:format_level(Level),
-                          24, log_formatter:format_domain(Domain)]),
-  Indent = iolist_size(Prefix),
-  String = case maps:find(event, Metadata) of
-             {ok, Event} ->
-               EventString = log_formatter:format_event(Event),
-               [$[, EventString, $], $\s, String0];
-             error ->
-               String0
-           end,
+                          24 + DomainLengthDiff, DomainString]),
+  {String, StringLengthDiff} =
+    case maps:find(event, Metadata) of
+      {ok, Event} ->
+        EventString = log_formatter:format_event(Event),
+        EventPrefix0 = [$[, EventString, $], $\s],
+        {EventPrefix, EventPrefixLengthDiff} =
+          maybe_colorize(EventPrefix0, yellow, Config),
+        {[EventPrefix, String0], EventPrefixLengthDiff};
+      error ->
+        {String0, 0}
+    end,
   TrimmedString = string:trim(String, trailing, " \n\t"),
-  PaddedString = pad_multiline_string(TrimmedString, 80),
+  PaddedString = pad_multiline_string(TrimmedString, 80 + StringLengthDiff),
+  Indent = iolist_size(Prefix),
   IndentedString = indent_multiline_string(PaddedString, Indent),
   IgnoredMetadata = [domain, time, event, % duplicate
                      error_logger, logger_formatter, report_cb, % useless
@@ -53,7 +64,7 @@ format(String0, Level, Metadata, Config) ->
                        map_size(Metadata2) =:= 0 ->
                          [];
                        true ->
-                         [<<"  ">>, format_metadata(Metadata2)]
+                         [<<"  ">>, format_metadata(Metadata2, Config)]
                      end,
   [Prefix, IndentedString, MetadataString, $\n].
 
@@ -97,14 +108,20 @@ format_time(SystemTime) ->
   calendar:system_time_to_rfc3339(SystemTime, [{unit, microsecond},
                                                {offset, "Z"}]).
 
--spec format_metadata(logger:metadata()) -> unicode:chardata().
-format_metadata(Metadata) ->
+-spec format_metadata(logger:metadata(), log_formatter:config()) ->
+        unicode:chardata().
+format_metadata(Metadata, Config) ->
   Pairs = maps:to_list(Metadata),
-  lists:join($\s, lists:map(fun format_metadata_pair/1, Pairs)).
+  PairStrings = lists:map(fun (Pair) ->
+                              format_metadata_pair(Pair, Config)
+                          end, Pairs),
+  lists:join($\s, PairStrings).
 
--spec format_metadata_pair({atom(), term()}) -> unicode:chardata().
-format_metadata_pair({Name, Value}) ->
-  [atom_to_binary(Name), $=, format_metadata_value(Value)].
+-spec format_metadata_pair({atom(), term()}, log_formatter:config()) ->
+        unicode:chardata().
+format_metadata_pair({Name0, Value}, Config) ->
+  {Name, _} = maybe_colorize(atom_to_binary(Name0), blue, Config),
+  [Name, $=, format_metadata_value(Value)].
 
 -spec format_metadata_value(term()) -> unicode:chardata().
 format_metadata_value(Value) ->
@@ -114,3 +131,17 @@ format_metadata_value(Value) ->
 -spec quote_string(binary()) -> unicode:chardata().
 quote_string(String) ->
   json:serialize(String).
+
+-spec maybe_colorize(unicode:chardata(), log_formatter_term:color(),
+                     log_formatter:config()) ->
+        {unicode:chardata(), LengthDiff :: non_neg_integer()}.
+maybe_colorize(Data, Color, Config) ->
+  Length1 = string:length(Data),
+  case maps:get(color, Config, false) of
+    true ->
+      Data2 = log_formatter_term:colorize(Data, Color),
+      Length2 = string:length(Data2),
+      {Data2, Length2 - Length1};
+    false ->
+      {Data, 0}
+  end.

@@ -1,6 +1,8 @@
 % erl-log-formatter changelog
 
 # Next Version
+## Features
+- Add optional colorization in text mode.
 
 # 1.3.0
 ## Features

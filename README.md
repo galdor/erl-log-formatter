@@ -61,6 +61,7 @@ The following options are available in the formatter configuration map:
 - `format`: the output format, either `text` or `json`.
 - `include_time`: include the time in each formatted message (`text` format
   only).
+- `color`: colorize log entries (`text` format only).
 
 # Contact
 If you find a bug or have any question, feel free to open a GitHub issue or to
