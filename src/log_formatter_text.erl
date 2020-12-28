@@ -33,13 +33,12 @@ format(String0, Level, Metadata, Config) ->
                  false ->
                    []
                end,
-  DomainString0 = log_formatter:format_domain(Domain),
-  {DomainString, DomainLengthDiff} =
-    maybe_colorize(DomainString0, green, Config),
-  Prefix = io_lib:format(<<"~s~-*s ~-*ts ">>,
+  DomainString0 = string:pad(log_formatter:format_domain(Domain), 24),
+  {DomainString, _} = maybe_colorize(DomainString0, green, Config),
+  Prefix = io_lib:format(<<"~s~-*s ~ts ">>,
                          [TimeString,
                           9, log_formatter:format_level(Level),
-                          24 + DomainLengthDiff, DomainString]),
+                          DomainString]),
   {String, ExtraPrefixLength, StringLengthDiff} =
     case maps:find(event, Metadata) of
       {ok, Event} ->
