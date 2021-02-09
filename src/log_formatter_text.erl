@@ -134,7 +134,8 @@ metadata_parts(Metadata0) ->
             #{text => "="},
             #{text => format_metadata_value(Value)}]
            || {Name, Value} <- maps:to_list(Metadata)],
-  lists:flatten(Parts).
+  Spacer = #{text => " "},
+  lists:flatten(lists:join(Spacer, Parts)).
 
 -spec format_metadata_value(term()) -> unicode:chardata().
 format_metadata_value(Value) ->
