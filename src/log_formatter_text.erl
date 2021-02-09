@@ -63,11 +63,11 @@ format(String0, Level, Metadata, Config) ->
                      pid, gl], % added by the logger
   Metadata2 = maps:without(IgnoredMetadata, Metadata),
   MetadataString = if
-                       map_size(Metadata2) =:= 0 ->
-                         [];
-                       true ->
-                         [<<"  ">>, format_metadata(Metadata2, Config)]
-                     end,
+                     map_size(Metadata2) =:= 0 ->
+                       [];
+                     true ->
+                       [<<"  ">>, format_metadata(Metadata2, Config)]
+                   end,
   [Prefix, IndentedString, MetadataString, $\n].
 
 -spec indent_multiline_string(unicode:chardata(), non_neg_integer()) ->
