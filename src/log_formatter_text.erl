@@ -56,7 +56,7 @@ format(Message, Level, Metadata, Config) ->
   BaseParts0 = [TimePart, LevelPart, DomainPart, EventPart, MessagePart],
   BaseParts = [P || P <- BaseParts0, P =/= undefined],
   MetadataParts = metadata_parts(Metadata),
-  Spacer = #{text => "  "},
+  Spacer = #{text => " "},
   Line = lists:join(Spacer, BaseParts) ++ [Spacer] ++ MetadataParts,
   [format_line(Line, Config), $\n].
 
