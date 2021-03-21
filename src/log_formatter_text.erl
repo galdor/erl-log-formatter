@@ -144,4 +144,4 @@ format_metadata_value(Value) ->
 
 -spec quote_string(binary()) -> unicode:chardata().
 quote_string(String) ->
-  json:serialize(String).
+  [$", re:replace(String, "[\\\\\"]", "\\\\&", [global]), $"].

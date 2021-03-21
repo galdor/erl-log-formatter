@@ -3,6 +3,8 @@
 # Next Version
 ## Features
 - Add optional colorization in text mode.
+## Bugs
+- Fix metadata escaping when values contain `/` characters.
 
 # 1.3.0
 ## Features
