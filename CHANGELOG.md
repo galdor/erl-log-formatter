@@ -1,6 +1,9 @@
 % erl-log-formatter changelog
 
 # Next Version
+## Misc
+- Put log metadata on their own line for the text output, making long messages
+  easier to read.
 
 # 1.3.1
 ## Features

@@ -16,9 +16,18 @@
 
 -export([format/4]).
 
+-type column() :: pos_integer().
+
+-type tag() :: term().
+-type tag_table() :: #{tag() := pos_integer()}.
+
 -type part() :: #{text := unicode:chardata(),
                   color => log_formatter_term:color(),
-                  width => pos_integer()}.
+                  width => pos_integer()}
+              | {spacer, pos_integer()}
+              | {tag, tag()}
+              | {align, tag()}
+              | eol.
 -type line() :: [part()].
 
 -spec format(unicode:chardata(), logger:level(), logger:metadata(),
@@ -53,29 +62,48 @@ format(Message, Level, Metadata, Config) ->
                   undefined
               end,
   MessagePart = #{text => string:trim(Message, trailing, " \n\t")},
-  BaseParts0 = [TimePart, LevelPart, DomainPart, EventPart, MessagePart],
-  BaseParts = [P || P <- BaseParts0, P =/= undefined],
+  FullMessagePart = case EventPart of
+                      undefined ->
+                        [{tag, message}, MessagePart];
+                      _ ->
+                        [{tag, message}, EventPart, {spacer, 1}, MessagePart]
+                    end,
+  BaseParts0 = [TimePart, LevelPart, DomainPart, FullMessagePart],
+  BaseParts = lists:join({spacer, 1}, [P || P <- BaseParts0, P =/= undefined]),
   MetadataParts = metadata_parts(Metadata),
-  Spacer = #{text => " "},
-  Line = lists:join(Spacer, BaseParts) ++ [Spacer] ++ MetadataParts,
+  Line = lists:flatten(BaseParts) ++ [{spacer, 1}] ++ MetadataParts,
   [format_line(Line, Config), $\n].
 
 -spec format_line(line(), log_formatter:config()) -> unicode:chardata().
 format_line(Line, Config) ->
-  format_parts(Line, [], 1, Config).
+  format_parts(Line, [], 1, #{}, Config).
 
--spec format_parts([part()], [unicode:chardata()], pos_integer(),
+-spec format_parts([part()], [unicode:chardata()], column(), tag_table(),
                    log_formatter:config()) ->
         unicode:chardata().
-format_parts([], Acc, _, _) ->
+format_parts([], Acc, _, _, _) ->
   lists:reverse(Acc);
-format_parts([Part | Parts], Acc, Column, Config) ->
-  {String, Column2} = format_part(Part, Column, Config),
-  format_parts(Parts, [[String] | Acc], Column2, Config).
+format_parts([Part | Parts], Acc, Column, Tags, Config) ->
+  {String, Column2, Tags2} = format_part(Part, Column, Tags, Config),
+  format_parts(Parts, [[String] | Acc], Column2, Tags2, Config).
 
--spec format_part(part(), pos_integer(), log_formatter:config()) ->
-        {unicode:chardata(), pos_integer()}.
-format_part(Part = #{text := Text}, Column, Config) ->
+-spec format_part(part(), column(), tag_table(), log_formatter:config()) ->
+        {unicode:chardata(), column(), tag_table()}.
+format_part(eol, _Column, Tags, _Config) ->
+  {"\n", 1, Tags};
+format_part({spacer, Width}, Column, Tags, _Config) ->
+  {lists:duplicate(Width, $\s), Column+Width, Tags};
+format_part({tag, Tag}, Column, Tags, _Config) ->
+  {"", Column, Tags#{Tag => Column}};
+format_part({align, Tag}, Column, Tags, _Config) ->
+  case maps:find(Tag, Tags) of
+    {ok, TagColumn} when Column < TagColumn ->
+      Width = TagColumn - Column,
+      {lists:duplicate(Width, $\s), Column+Width, Tags};
+    _ ->
+      {"", Column, Tags}
+  end;
+format_part(Part = #{text := Text}, Column, Tags, Config) ->
   PaddedText = case maps:find(width, Part) of
                  {ok, Width} ->
                    pad_text(Text, Width);
@@ -89,15 +117,15 @@ format_part(Part = #{text := Text}, Column, Config) ->
                     error ->
                       IndentedText
                   end,
-  {ColorizedText, Column2}.
+  {ColorizedText, Column2, Tags}.
 
 -spec pad_text(unicode:chardata(), pos_integer()) -> unicode:chardata().
 pad_text(Text, Width) ->
   Lines = [[string:pad(Line, Width)] || Line <- string:split(Text, "\n")],
   lists:join($\n, Lines).
 
--spec indent_text(unicode:chardata(), pos_integer()) ->
-        {unicode:chardata(), pos_integer()}.
+-spec indent_text(unicode:chardata(), column()) ->
+        {unicode:chardata(), column()}.
 indent_text(Text, Column) ->
   Padding = lists:duplicate(Column-1, $\s),
   [FirstLine | OtherLines] = string:split(Text, "\n", all),
@@ -130,12 +158,16 @@ metadata_parts(Metadata0) ->
              mfa, file, line, % added by log macros
              pid, gl], % added by the logger
   Metadata = maps:without(Ignored, Metadata0),
-  Parts = [[#{text => atom_to_binary(Name), color => blue},
-            #{text => "="},
-            #{text => format_metadata_value(Value)}]
-           || {Name, Value} <- maps:to_list(Metadata)],
-  Spacer = #{text => " "},
-  lists:flatten(lists:join(Spacer, Parts)).
+  if
+    map_size(Metadata) =:= 0 ->
+      [];
+    true ->
+      Parts = [[#{text => atom_to_binary(Name), color => blue},
+                #{text => "="},
+                #{text => format_metadata_value(Value)}]
+               || {Name, Value} <- maps:to_list(Metadata)],
+      [eol, {align, message}] ++ lists:flatten(lists:join({spacer, 1}, Parts))
+  end.
 
 -spec format_metadata_value(term()) -> unicode:chardata().
 format_metadata_value(Value) ->
