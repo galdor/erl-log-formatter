@@ -4,6 +4,8 @@ This repository contains a customizable formatter for the
 
 It currently supports a human-readable text output and a JSON output.
 
+**This application is now included in [erl-mlog](https://github.com/exograd/erl-mlog).**
+
 # Features
 ## Metadata
 The following metadata entry are handled separately:
